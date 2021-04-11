@@ -1,3 +1,17 @@
+##----ImitateWebsite-------##
+#     作者 : 喵不嗷          #
+#        第三方库            #
+#      bs4 , requests       #
+##-------------------------##
+        #==========#
+#===========================#
+        #==========#
+##----ImitateWebsite-------##
+#     Author : MiaoBuao     #
+#     Three-part libs：     #
+#      bs4，requests        #
+##-------------------------##
+
 import sys
 import threading
 import re
