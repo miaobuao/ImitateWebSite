@@ -3,9 +3,9 @@
 #        第三方库            #
 #      bs4 , requests       #
 ##-------------------------##
-        #==========#
+#==========#
 #===========================#
-        #==========#
+#==========#
 ##----ImitateWebsite-------##
 #     Author : MiaoBuao     #
 #     Three-part libs：     #
@@ -23,9 +23,9 @@ from urllib.parse import urlparse, uses_netloc
 
 
 class Download(threading.Thread):
-    def isHttps(self,https_url):
+    def isHttps(self, https_url):
         try:
-            if r.get(https_url).status_code==200:
+            if r.get(https_url).status_code == 200:
                 return True
         except:
             return False
@@ -44,14 +44,13 @@ class Download(threading.Thread):
             if i:
                 path += ('/'+i)
         if not info[0]:
-            https="https://"+info[1]+path
+            https = "https://"+info[1]+path
             if self.isHttps(https):
                 return https
             else:
                 return "http://"+info[1]+path
         else:
             return info[0]+"://"+info[1]+path
-
 
     def add(self, url, path):
         self.path = path
@@ -90,6 +89,8 @@ class Imitate:
         self.url = urlparse(url)
         self.oURL = url
         self.root = self.rightDir(root)
+        if not os.path.exists(self.root):
+            os.makedirs(self.root)
         self.text = ''
         self.doc = ''
         self.r = r.get(url)
@@ -124,11 +125,11 @@ class Imitate:
         if not self.doc:
             self.dom()
 
-    def fixSrc(self,src):
-        lists=src.split("/")
-        words=[]
+    def fixSrc(self, src):
+        lists = src.split("/")
+        words = []
         for i in lists:
-            if i!='':
+            if i != '':
                 words.append(i)
         return "/".join(words)
 
@@ -156,64 +157,54 @@ class Imitate:
         path.append(info[1])
         return '/'.join(path)
 
+    def clone_tag(self, tag):
+        attrs = tag.attrs
+        if attrs["src"]:
+            if self.isUrl(attrs['src']):
+                src = attrs["src"]
+                info = urlparse(src)
+                if self.doc.find(tag.name, tag.attrs).attrs['src']:
+                    t = self.fixSrc(self.fixPath(info[1]+info[2]))
+                    self.doc.find(tag.name, tag.attrs).attrs['src'] = t
+                    print(t)
+                source = self.root+"/" + info[1]+info[2]
+            else:
+                src = self.baseUrl(self.oURL)+"/"+attrs['src']
+                if self.doc.find(tag.name, tag.attrs).attrs['src']:
+                    t = self.fixSrc(self.fixPath(urlparse(src)[2]))
+                    self.doc.find(tag.name, tag.attrs).attrs['src'] = t
+                    print(t)
+                source = self.root+"/"+urlparse(src)[2]
+        elif attrs["href"]:
+            if self.isUrl(attrs['href']):
+                src = attrs["href"]
+                info = urlparse(src)
+                if self.doc.find(tag.name, tag.attrs).attrs['href']:
+                    t = self.fixSrc(self.fixPath(info[1]+info[2]))
+                    self.doc.find(tag.name, tag.attrs).attrs['href'] = t
+                    print(t)
+                source = self.root + "/" + info[1] + info[2]
+            else:
+                src = self.baseUrl(self.oURL)+"/"+attrs['href']
+                if self.doc.find(tag.name, tag.attrs).attrs['href']:
+                    t = self.fixSrc(self.fixPath(urlparse(src)[2]))
+                    self.doc.find(tag.name, tag.attrs).attrs['href'] = t
+                    print(t)
+                source = self.root+"/"+urlparse(src)[2]
+        down = Download()
+        down.add(src, source)
+        down.run()
+
     def run(self):
         self.isDom()
         for tag in self.doc.descendants:
             try:
-                attrs = tag.attrs
-                if attrs["src"]:
-                    if self.isUrl(attrs['src']):
-                        src = attrs["src"]
-                        info = urlparse(src)
-                        if self.doc.find(tag.name, tag.attrs).attrs['src']:
-                            self.doc.find(tag.name, tag.attrs).attrs['src']=self.fixSrc(self.fixPath(info[1]+info[2]))
-                            print(self.doc.find(tag.name, tag.attrs).attrs['src'])
-                        source = self.root+"/" + info[1]+info[2]
-                        down = Download()
-                        down.add(src, source)
-                        down.run()
-                    else:
-                        src = self.baseUrl(self.oURL)+"/"+attrs['src']
-                        if self.doc.find(tag.name, tag.attrs).attrs['src']:
-                            # print(self.doc.find(tag.name, tag.attrs).attrs)
-                            self.doc.find(tag.name, tag.attrs).attrs['src']=self.fixSrc(self.fixPath(urlparse(src)[2]))
-                            print(self.doc.find(tag.name, tag.attrs).attrs['src'])
-                        source = self.root+"/"+urlparse(src)[2]
-                        down = Download()
-                        down.add(src, source)
-                        down.run()
-            except:
-                pass
-        for tag in self.doc.descendants:
-            try:
-                attrs = tag.attrs
-                if attrs["href"]:
-                    if self.isUrl(attrs['href']):
-                        src = attrs["href"]
-                        info = urlparse(src)
-                        if self.doc.find(tag.name, tag.attrs).attrs['href']:
-                            self.doc.find(tag.name, tag.attrs).attrs['href']=self.fixSrc(self.fixPath(info[1]+info[2]))
-                            print(self.doc.find(tag.name, tag.attrs).attrs['href'])
-                        source = self.root+"/" + \
-                            info[1]+info[2]
-                        down = Download()
-                        down.add(src, source)
-                        down.run()
-                    else:
-                        src = self.baseUrl(self.oURL)+"/"+attrs['href']
-                        if self.doc.find(tag.name, tag.attrs).attrs['href']:
-                            # print(self.doc.find(tag.name, tag.attrs).attrs)
-                            self.doc.find(tag.name, tag.attrs).attrs['href']=self.fixSrc(self.fixPath(urlparse(src)[2]))
-                            print(self.doc.find(tag.name, tag.attrs).attrs['href'])
-                        source = self.root+"/"+urlparse(src)[2]
-                        down = Download()
-                        down.add(src, source)
-                        down.run()
+                self.clone_tag(tag)
             except:
                 pass
         if os.path.split(urlparse(self.oURL)[2])[1] == '':
-            outpath=self.root+'/'+"index.html"
+            outpath = self.root+'/'+"index.html"
             self.output(outpath, self.doc.prettify())
         else:
-            outpath=self.root+'/'+os.path.split(urlparse(self.oURL)[2])[1]
+            outpath = self.root+'/'+os.path.split(urlparse(self.oURL)[2])[1]
             self.output(outpath, self.doc.prettify())
