@@ -1,0 +1,4 @@
+meo==0.0.7.2022.9.10
+requests
+bs4
+lxml
